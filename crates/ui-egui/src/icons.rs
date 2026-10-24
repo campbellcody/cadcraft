@@ -1,6 +1,6 @@
 //! CADCraft's icon set, drawn in code (original work, MIT OR Apache-2.0 with the codebase).
 //!
-//! Icons are line drawings on a 24×24 design grid: light strokes for existing geometry, blue for
+//! Icons are line drawings on a 24×24 design grid: light strokes for existing geometry, green for
 //! the geometry a command creates and orange dots for picked points.
 
 use craft_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
@@ -449,7 +449,7 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, dim: bool) {
         }
         Gradient => {
             for i in 0..9 {
-                let c = Color32::from_rgb(40 + i * 22, 80 + i * 16, 160 + i * 9);
+                let c = Color32::from_rgb(40 + i * 22, 140 + i * 12, 80 + i * 16);
                 pen.fill_rect(3.0 + i as f32 * 2.0, 3.0, 2.0, 18.0, if dim { c.gamma_multiply(0.4) } else { c });
             }
             pen.rect(3.0, 3.0, 18.0, 18.0, b);
@@ -954,7 +954,7 @@ pub fn button(ui: &mut egui::Ui, icon: Icon, size: f32, tooltip: &str, selected:
         focus_stroke: Stroke::new(1.0, t.accent),
     };
     let resp = IconButton::new(crate::i18n::t(tooltip), egui::vec2(size, size), &style).selected(selected).show(ui, |ui, rect, _| {
-        // A single tint would erase the blue geometry and orange picked points. Keep the
+        // A single tint would erase the accent geometry and orange picked points. Keep the
         // original painter and its explicit dimming on the same parent-enabled UI.
         paint(ui.painter(), rect.shrink(size * 0.08), icon, !ui.is_enabled());
     });

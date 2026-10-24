@@ -503,7 +503,7 @@ pub fn status_bar(app: &mut CadApp, ui: &mut egui::Ui) {
             }
             icons::paint(&p, br.shrink(2.5), icon, false);
             if on {
-                // Re-tint the icon blue-ish by an underline.
+                // Mark the active toggle with an accent underline.
                 p.hline(br.x_range().shrink(4.0), br.bottom() - 1.0, Stroke::new(1.5, t.toggle_on));
             }
             icons::describe_control(ui, &resp, tip, Some(on), false);

@@ -15,6 +15,12 @@ includes a separate mechanical Clippy cleanup commit. No upstream changes are re
 by an old feature snapshot. Both the component and packaging commands remain available
 through the normal engine registry.
 
+The Electrical branch uses a green circuit icon and matching interface palettes: forest
+green in dark mode and light sage in light mode. Tool accents, selection controls,
+command prompts and navigation overlays share the theme tokens. User-selected canvas
+and selection colours still take precedence; drawing entity and layer colours retain
+their document values.
+
 ## What to evaluate
 
 | Workflow | Implemented scope | Remaining limits |

@@ -10,7 +10,7 @@
 //! twist, no 3D view direction and no user coordinate system yet, so the compass ring explains
 //! that instead of rotating, and the WCS menu lists the only coordinate system there is.
 
-use egui::{Color32, CursorIcon, Pos2, Rect, Sense, Stroke, pos2, vec2};
+use egui::{CursorIcon, Pos2, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::json;
 
 use crate::CadApp;
@@ -83,21 +83,22 @@ pub fn show(app: &mut CadApp, ui: &mut egui::Ui, l: &Layout) {
     let resp = ui.interact(l.bounds, ui.id().with("viewcube"), Sense::click_and_drag());
     let part = resp.hover_pos().and_then(|p| l.part_at(p));
     let p = ui.painter_at(l.bounds.union(l.pill));
-    let ring_col = if part == Some(Part::Ring) { Color32::from_rgb(0x5c, 0x67, 0x7c) } else { Color32::from_rgb(0x48, 0x50, 0x5c) };
+    let t = Tokens::DARK;
+    let ring_col = if part == Some(Part::Ring) { t.control_hover } else { t.control };
     p.circle_stroke(l.center, l.ring, Stroke::new(9.0, ring_col));
-    p.circle_stroke(l.center, l.ring + 4.5, Stroke::new(1.0, Color32::from_rgb(0x5c, 0x65, 0x72)));
+    p.circle_stroke(l.center, l.ring + 4.5, Stroke::new(1.0, t.cmd_border));
     let f = egui::FontId::proportional(17.0);
-    let lc = Color32::from_rgb(0xc8, 0xcc, 0xd2);
+    let lc = t.icon;
     let c = l.center;
     let ring = l.ring;
     p.text(c + vec2(0.0, -ring - 1.0), egui::Align2::CENTER_CENTER, crate::tl!("N"), f.clone(), lc);
     p.text(c + vec2(0.0, ring + 1.0), egui::Align2::CENTER_CENTER, crate::tl!("S"), f.clone(), lc);
     p.text(c + vec2(ring + 1.0, 0.0), egui::Align2::CENTER_CENTER, crate::tl!("E"), f.clone(), lc);
     p.text(c + vec2(-ring - 1.0, 0.0), egui::Align2::CENTER_CENTER, crate::tl!("W"), f, lc);
-    let face_col = if part == Some(Part::Face) { Color32::from_rgb(0xb8, 0xbc, 0xc2) } else { Color32::from_rgb(0x9a, 0x9e, 0xa4) };
+    let face_col = if part == Some(Part::Face) { t.text } else { t.text_dim };
     p.rect_filled(l.face, 2.0, face_col);
-    p.rect_stroke(l.face, 2.0, Stroke::new(1.0, Color32::from_rgb(0x6c, 0x70, 0x76)), egui::StrokeKind::Inside);
-    p.text(c, egui::Align2::CENTER_CENTER, crate::tl!("TOP"), egui::FontId::proportional(13.0), Color32::from_rgb(0x50, 0x54, 0x5a));
+    p.rect_stroke(l.face, 2.0, Stroke::new(1.0, t.text_faint), egui::StrokeKind::Inside);
+    p.text(c, egui::Align2::CENTER_CENTER, crate::tl!("TOP"), egui::FontId::proportional(13.0), t.chrome_dark);
     paint_home(&p, l.home, part == Some(Part::Home));
 
     let resp = match part {

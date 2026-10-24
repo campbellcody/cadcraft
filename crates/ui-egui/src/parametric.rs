@@ -436,7 +436,7 @@ pub fn draw_overlay(app: &mut CadApp, ui: &mut egui::Ui, painter: &egui::Painter
         let sp = xf.to_screen(*a);
         if xf.rect.contains(sp) {
             let r = Rect::from_center_size(sp, vec2(6.0, 6.0));
-            painter.rect_filled(r, 0.0, Color32::from_rgb(0x3d, 0x8b, 0xfd).gamma_multiply(alpha.max(0.5)));
+            painter.rect_filled(r, 0.0, Tokens::get().accent.gamma_multiply(alpha.max(0.5)));
         }
     }
     let cell = 18.0;
