@@ -5,6 +5,9 @@ retains the CADCraft icon family's rounded tile, drafting grid, heavy dark outli
 ivory shapes and orange accent, replacing the drafting tools with an integrated circuit,
 traces and terminal pads.
 
+The matching Light/Dark interface palettes and contributor guidance are documented in
+[electrical-theme.md](electrical-theme.md).
+
 ## Provenance
 
 - Created on 2026-10-24 with the built-in `image_gen` tool, using the repository's

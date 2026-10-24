@@ -19,7 +19,7 @@ The Electrical branch uses a green circuit icon and matching interface palettes:
 green in dark mode and light sage in light mode. Tool accents, selection controls,
 command prompts and navigation overlays share the theme tokens. User-selected canvas
 and selection colours still take precedence; drawing entity and layer colours retain
-their document values.
+their document values. See the [palette and contributor guide](electrical-theme.md).
 
 ## What to evaluate
 

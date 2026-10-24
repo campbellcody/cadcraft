@@ -4,6 +4,17 @@ CADCraft is a clean-room, open-source, pure-Rust computer-aided design and draft
 
 Standards and learnings shared across the crafting apps live in `../../craftrules` (or `storytold/craftrules`). Read its `AGENTS.md` at the start of a session, follow its standards, and contribute reusable learnings back there. Never code: repos don't share code.
 
+## Electrical branch identity
+
+`cadcraft-electrical` is the EE-focused integration branch. Its default appearance is
+forest green in Dark mode and light sage in Light mode, paired with the green circuit
+app icon. Follow [the palette guide](docs/electrical-theme.md) for UI and branding work:
+use `theme::Tokens`, inspect both themes, preserve user colour overrides and document
+entity/layer colours, and retain functional warning, axis and picked-point colours.
+Icon provenance and regeneration are in [docs/electrical-icon.md](docs/electrical-icon.md).
+Commit and push Electrical work to `origin/cadcraft-electrical`; keep the upstream
+`main` branch for base-CAD integration.
+
 ## Start every session here
 1. Read `plan/STATUS.md` (current milestone, next task), then the task in `plan/execution-plan.md` and the relevant `plan/architecture.md` section. Behaviour reference: `plan/autocad/*` (`01-observed-ui.md` holds measured observations of the running reference app; `04-menu-tree.txt` the menu tree by name).
 2. Library decisions: `plan/adr/0001-geometry-libraries.md` (what we may depend on, what is rejected for licence reasons).
@@ -32,7 +43,7 @@ People trust CADCraft with their drawings; a crash loses their work. **This outr
 - **The UI is thin**: panels read engine state and act through `app.run(id, params)` / `app.start(id)` / `app.cmdline(text)`. Colours come from `theme::Tokens`.
 - **Time goes through `chrono`** (workspace dependency). Never hand-roll UTC/calendar conversion (days-to-date algorithms, leap-year math); a crate owns only its output format string. The one exception is range extension: past the years chrono can represent, shift the date by whole 400-year Gregorian cycles (146,097 days, after which the calendar repeats), let chrono compute the month and day, and add the cycles back to the year (splitting seconds into hours, minutes and seconds is plain arithmetic).
 - **Rust only** (no handwritten JS/TS). **Never break wasm** (`cargo xtask wasm`).
-- **Quality gates** before every commit: `cargo xtask ci` (fmt, clippy -D warnings, tests, assets, layers, wasm). Commit after every feature arc that builds, and push to `main`.
+- **Quality gates** before every commit: `cargo xtask ci` (fmt, clippy -D warnings, tests, assets, layers, wasm). Commit after every feature arc that builds, and push to the active project branch (for Electrical work, `origin/cadcraft-electrical`).
 
 ## Running and looking at the app
 - `cargo run --release -p cadcraft -- --sample --control PORT` (sample drawing + control channel). Pick a free port; other crafting apps use control ports too.

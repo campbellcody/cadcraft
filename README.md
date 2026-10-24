@@ -45,11 +45,15 @@
   <a href="https://getartcraft.com/apps">All Crafting Apps</a>
 </p>
 
+This branch develops **CADCraft Electrical** for EE students, with a green circuit icon,
+forest-green Dark mode and light sage Light mode. See the [palette guide](docs/electrical-theme.md)
+and [Electrical integration scope](docs/electrical-integration.md).
+
 <br>
 
 <p align="center">
   <img src="docs/images/ui-apartment.png" alt="CADCraft with an apartment floor plan open: hatched grey walls, blue windows, green door swings, furniture outlines, yellow room names with areas, a yellow room schedule table, a multileader note and cyan dimensions with architectural ticks; Tool Sets on the left, Layers and Properties on the right, the command line at the bottom" width="100%">
-  <br><sub><b>Apartment plan</b> (<a href="examples/apartment.dxf">examples/apartment.dxf</a>): walls with pick-point hatching, TrueType MTEXT room labels, a TABLE, a multileader and architectural dimensions — built entirely from CADCraft commands.</sub>
+  <br><sub><b>Apartment plan</b> (<a href="examples/apartment.dxf">examples/apartment.dxf</a>): walls with pick-point hatching, TrueType MTEXT room labels, a TABLE, a multileader and architectural dimensions — built entirely from CADCraft commands. This upstream screenshot predates the Electrical branch’s green interface.</sub>
 </p>
 
 > [!NOTE]
@@ -267,9 +271,9 @@ Nothing below `ui-egui` knows about egui, so the front end can be replaced. `car
 checks formatting, clippy, tests, asset attribution, the crate layering and the wasm build.
 
 Drafting and layer-palette icon buttons use the pinned `craft-ui` button component for interaction,
-accessible labels and keyboard focus. CADCraft keeps its multicolor icon painter, dark palette,
-disabled tint and tool commands. The native host saves workspace visibility and toolset choices
-atomically; `CADCRAFT_CONFIG_DIR` selects an isolated profile. Compact toolbar groups move into a
+accessible labels and keyboard focus. CADCraft Electrical uses its multicolor icon painter,
+shared green Light/Dark palettes, disabled tint and tool commands. The native host saves workspace
+visibility and toolset choices atomically; `CADCRAFT_CONFIG_DIR` selects an isolated profile. Compact toolbar groups move into a
 More menu, and status readouts truncate with a full-value tooltip before they reach layout tabs.
 Painted toolbar and tab controls
 have accessible labels and visible keyboard focus. Property controls remain application-specific.
