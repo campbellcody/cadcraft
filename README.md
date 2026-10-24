@@ -143,6 +143,16 @@ zoom e                          zoom to extents
 
 The web build: `cd apps/cadcraft-web && trunk serve` (needs [trunk](https://github.com/trunk-rs/trunk)).
 
+To share a native drawing with its xrefs, images and linked CSV files, use **File ▸ eTransmit...**
+or `ETRANSMIT`, then approve the source folder for dependencies. It creates a portable ZIP
+with relative reference paths and a missing-file
+manifest; see [drawing packages](docs/etransmit.md) for JSON automation and remaining limits.
+
+The `cadcraft-electrical` integration branch combines upstream CADCraft with electrical
+device metadata, physical-device BOM output and drawing packages. See the
+[integration evaluation guide](docs/electrical-integration.md) for scope, regression checks
+and the electrical workflows still missing.
+
 ### Fonts
 
 CADCraft has no fonts in its repository; it uses the TrueType/OpenType fonts installed on your

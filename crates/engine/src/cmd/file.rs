@@ -4,6 +4,7 @@
 
 mod pgp;
 mod template;
+mod transmit;
 
 use std::sync::OnceLock;
 
@@ -184,6 +185,7 @@ pub fn specs() -> Vec<CommandSpec> {
         CommandSpec::new("document.bytes", "Drawing as bytes", run_bytes)
             .params("{format?: dxf, version?: 2000…2018, binary?: bool} → {data: base64}")
             .noundo(),
+        transmit::spec(),
         CommandSpec::new("script", "Run Script...", run_script)
             .menu(&["Tools", "Run Script..."])
             .alias(&["scr"])

@@ -32,6 +32,14 @@ libc = "0.2"
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
 getrandom = { version = "0.4.3", features = ["wasm_js"] }
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# Portable ZIP packages (MIT); stored entries need no compression or native libraries.
+zip = { version = "2.4.2", default-features = false }
+# Stage completed archives before publishing without overwriting existing files (MIT/Apache-2.0).
+tempfile = "3"
+# Decode supported image dependencies with resource limits before including their original bytes.
+image = { workspace = true }
+
 [dev-dependencies]
 # Real DXF files for the external reference tests (io is a lower layer).
 cadcraft-io = { workspace = true }

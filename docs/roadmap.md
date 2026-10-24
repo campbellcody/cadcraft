@@ -1,6 +1,6 @@
 # CADCraft roadmap detail
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-24 · **Change:** minor (electrical foundation tracked separately from base-AutoCAD milestones) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-24 · **Change:** minor (electrical foundation and ETRANSMIT integration tracked separately from base estimates) · **Target:** Autodesk AutoCAD 2027
 
 Forward-looking plan: milestones with status, the current focus, and what comes next with
 estimates. The summary is [ROADMAP.md](../ROADMAP.md); the work items behind every line are in
@@ -80,7 +80,7 @@ agents that built each milestone, are in the progress log of [ROADMAP.md](../ROA
 | M4 | Annotation: DIM*, DIMSTYLE manager, MLEADER, in-place MTEXT, fields, tables, annotative scaling, SHX | ≈ 40% | 90–130 |
 | M5 | Hatch and blocks: hatch depth, block editor, dynamic blocks, xrefs, groups, attributes | ≈ 30% | 105–160 |
 | M6 | Layouts and plotting: viewports, page setups, plot styles, preview, PUBLISH | ≈ 35% | 35–50 |
-| M7 | Files: DWG/DXF fidelity and versions, RECOVER/AUDIT, templates, autosave, ETRANSMIT, underlays | ≈ 30% | 170–280 (incl. other formats) |
+| M7 | Files: DWG/DXF fidelity and versions, RECOVER/AUDIT, templates, autosave, ETRANSMIT, underlays | ≈ 30% (ETRANSMIT native ZIP packages done; support-file and web gaps remain) | 170–280 (incl. other formats) |
 | M8 | Inquiry and utilities, OPTIONS, customisation | ≈ 25% | 45–70 |
 | M9 | Parametric | ≈ 50% | 20–30 |
 | M10 | Performance: 1M entities at 60 fps, large DWG loads | ≈ 60% (internal numbers only) | 20–40 |
@@ -102,6 +102,8 @@ associations and JSON/CSV BOM output are implemented with synthetic DXF/DWG roun
 pins and wire connectivity, electrical projects and cross-sheet references, then terminal,
 PLC and panel workflows. Existing AutoCAD Electrical project compatibility is unverified.
 This track does not change the base-AutoCAD milestone percentages or estimates above.
+The `cadcraft-electrical` branch combines this foundation with ETRANSMIT on official
+upstream main; see the [integration evaluation guide](electrical-integration.md).
 
 ## After beta
 
@@ -112,7 +114,9 @@ AutoLISP surface, AI features with openly licensed local models, and every remai
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-24 | minor | Combined electrical and packaging features on cadcraft-electrical, with a relocation regression and evaluation guide |
 | 2026-10-24 | minor | Added electrical controls documentation track: device/BOM foundation done, connectivity/projects next; base estimates unchanged |
+| 2026-10-20 | minor | M7: ETRANSMIT packages drawings and explicitly authorized xrefs, validated PNG/JPEG images and UTF-8 CSV links with portable paths and a manifest; see [remaining limits](etransmit.md). Milestone percentage unchanged. |
 | 2026-10-12 | minor | Block Editor for static blocks landed: "Use blocks" evidence updated; status and hours unchanged (REFEDIT and dynamic blocks remain) |
 | 2026-10-11 | minor | Alpha-gate evidence refreshed for merged work (#459, #525, #528, #160, #186, #564); statuses and hours unchanged |
 | 2026-10-10 | minor | Merged main: fmt fixed, Ukrainian catalog noted in M13, ready for real work 38% |

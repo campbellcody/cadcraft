@@ -1,6 +1,6 @@
 # File-format parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-24 · **Change:** minor (CADCraft electrical metadata round trips; estimates unchanged) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-24 · **Change:** minor (electrical metadata and native ETRANSMIT integration; estimates unchanged) · **Target:** Autodesk AutoCAD 2027
 
 Every format AutoCAD 2027 reads or writes, with CADCraft's support, fidelity and tests. Work
 items are in [gaps.md](gaps.md#file-formats); the weighted score feeds
@@ -126,7 +126,7 @@ on read with a note, so such files no longer exceed the DXF limit (#1482). **DWG
 | SVG import (`.svg`, `.svgz`) | yes (via scripts) | OPEN reads shapes, paths, groups and Inkscape layers into entities (#636); no CSS classes, `use`, fills, text or images (what the drawing loses is named in a note on open, #627) | 2–4 |
 | AutoLISP (`.lsp`, `.fas`, `.vlx`), `.dll`/`.arx` plug-ins | yes | `.lsp` loads (APPLOAD, `(load)`, a dropped file; #758); no Visual LISP ActiveX (`vlax-`), DCL dialogs or reactors; `.fas`/`.vlx` are compiled and undocumented; no `.dll`/`.arx` | see [gaps.md](gaps.md) (E1) |
 | Data extraction (`.csv`, `.xls`) and data links | yes | DATAEXTRACTION/EATTEXT to CSV or a table (#433); table data links read CSV (#534); no `.xls`, no `.dxe` templates | 3–5 |
-| eTransmit (`.zip` packages) | yes | no | 4–6 |
+| eTransmit (`.zip` packages) | yes | native ZIP output with approved xrefs, validated images and linked CSV files; extract before opening; no web packaging, fonts or plot configs ([limits](etransmit.md)) | not re-estimated |
 
 ## Tests
 
@@ -141,6 +141,7 @@ our output in AutoCAD black-box.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-24 | minor | Integrated native ETRANSMIT status and electrical metadata on cadcraft-electrical; combined relocation regression covers DXF/DWG, a child xref and linked BOM CSV |
 | 2026-10-24 | minor | Own electrical metadata persistence verified synthetically in ASCII/binary DXF and DWG; compatibility and base-format estimates unchanged |
 | 2026-10-22 | minor | DXF/DWG save: angular, diametric and radial dimensions get standard DIMASSOC objects (one centre reference to the circle for radial/diametric, the definition points for angular), so AutoCAD follows their geometry; the standard objects of those kinds are read back too, without CADCraft's xdata (#1651) |
 | 2026-10-19 | minor | DXF/DWG save: angular dimension block text honors DIMDSEP, including per-dimension overrides (#1646) |
