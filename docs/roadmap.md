@@ -1,6 +1,6 @@
 # CADCraft roadmap detail
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-12 · **Change:** minor (Block Editor for static blocks: "Use blocks" evidence updated) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-24 · **Change:** minor (electrical foundation tracked separately from base-AutoCAD milestones) · **Target:** Autodesk AutoCAD 2027
 
 Forward-looking plan: milestones with status, the current focus, and what comes next with
 estimates. The summary is [ROADMAP.md](../ROADMAP.md); the work items behind every line are in
@@ -94,6 +94,15 @@ agents that built each milestone, are in the progress log of [ROADMAP.md](../ROA
 Milestone rows overlap a little with the cross-cutting rows; the total is the dimension sum in
 [target-app-parity.md](target-app-parity.md), not the column sum.
 
+## Electrical controls documentation (additional track)
+
+Single-drawing physical-device identities, shared component metadata, coil/contact/footprint
+associations and JSON/CSV BOM output are implemented with synthetic DXF/DWG round-trip tests.
+[Usage and limitations](electrical.md) describe the current command-based workflow. Next:
+pins and wire connectivity, electrical projects and cross-sheet references, then terminal,
+PLC and panel workflows. Existing AutoCAD Electrical project compatibility is unverified.
+This track does not change the base-AutoCAD milestone percentages or estimates above.
+
 ## After beta
 
 3D foundations (UCS, 3D views, orbit, then solids per `plan/adr/0001`), sheet sets, the full
@@ -103,6 +112,7 @@ AutoLISP surface, AI features with openly licensed local models, and every remai
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-24 | minor | Added electrical controls documentation track: device/BOM foundation done, connectivity/projects next; base estimates unchanged |
 | 2026-10-12 | minor | Block Editor for static blocks landed: "Use blocks" evidence updated; status and hours unchanged (REFEDIT and dynamic blocks remain) |
 | 2026-10-11 | minor | Alpha-gate evidence refreshed for merged work (#459, #525, #528, #160, #186, #564); statuses and hours unchanged |
 | 2026-10-10 | minor | Merged main: fmt fixed, Ukrainian catalog noted in M13, ready for real work 38% |

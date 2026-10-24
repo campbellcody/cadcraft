@@ -8,6 +8,7 @@
 
 mod array;
 mod constraint;
+pub mod electrical;
 mod entity;
 mod extents;
 mod gdt;
@@ -84,6 +85,8 @@ impl Space {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Drawing {
+    /// Physical electrical devices and their top-level graphical representations.
+    pub electrical: std::sync::Arc<electrical::ElectricalData>,
     pub header: Header,
     /// File data CADCraft does not model, written back on save.
     pub foreign: std::sync::Arc<foreign::Foreign>,
@@ -160,6 +163,7 @@ impl Drawing {
         Drawing {
             header: Header::default(),
             foreign: std::sync::Arc::default(),
+            electrical: std::sync::Arc::default(),
             layers: vec![Layer::default(), Layer { name: "Defpoints".into(), plot: false, ..Layer::default() }],
             linetypes: vec![
                 Linetype { name: "ByBlock".into(), description: String::new(), pattern: Vec::new() },
