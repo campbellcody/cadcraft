@@ -9,6 +9,18 @@ const UPDATE: &str = "electrical.component.update";
 const DETACH: &str = "electrical.component.detach";
 const LIST: &str = "electrical.components";
 const BOM: &str = "electrical.bom";
+const PIN_DEF: &str = "electrical.pin.define";
+const PIN_REM: &str = "electrical.pin.remove";
+const PINS: &str = "electrical.pins";
+const WIRE: &str = "electrical.wire";
+const WIRE_ASSIGN: &str = "electrical.wire.assign";
+const WIRE_DETACH: &str = "electrical.wire.detach";
+const JUNCTION: &str = "electrical.junction";
+const JUNCTION_REM: &str = "electrical.junction.remove";
+const JUNCTIONS: &str = "electrical.junctions";
+const NET_INSPECT: &str = "electrical.net.inspect";
+const NET_HIGHLIGHT: &str = "electrical.net.highlight";
+const NETS: &str = "electrical.nets";
 
 fn drawing() -> (Session, Vec<String>) {
     let mut s = Session::new();
@@ -160,6 +172,21 @@ fn malformed_parameters_never_mutate_or_panic() {
         (LIST, json!({"typo": true})),
         (BOM, json!({"file": false})),
         (BOM, json!({"file": "bad.txt"})),
+        (PIN_DEF, json!({"block": ""})),
+        (PIN_DEF, json!({"block": "B", "pins": [{"name": "", "at": [0, 0]}]})),
+        (PIN_DEF, json!({"block": "B", "pins": [{"name": "P", "at": ["bad", 0]}]})),
+        (PIN_REM, json!({})),
+        (PINS, json!({"unknown": true})),
+        (WIRE, json!({"points": []})),
+        (WIRE, json!({"points": [[0, 0]]})),
+        (WIRE_ASSIGN, json!({"handles": ["not_a_hex"]})),
+        (WIRE_DETACH, json!({"handles": "not_an_array"})),
+        (JUNCTION, json!({})),
+        (JUNCTION_REM, json!({})),
+        (JUNCTIONS, json!({"typo": true})),
+        (NET_INSPECT, json!({})),
+        (NET_HIGHLIGHT, json!({})),
+        (NETS, json!({"typo": true})),
     ];
     s.execute("line", &json!({"points": [[0, 0], [1, 1]]})).unwrap();
     let line = s.doc().unwrap().model.iter().find(|e| matches!(e.kind, EntityKind::Line(_))).unwrap().handle;
@@ -318,4 +345,251 @@ fn locked_layers_protect_all_representations_before_shared_edits() {
     assert!(s.execute(DETACH, &json!({"handle": hs[1]})).is_err());
     assert!(s.execute(ASSIGN, &json!({"handle": hs[1], "tag": "K2"})).is_err());
     assert_eq!(*s.doc().unwrap(), before);
+}
+
+#[test]
+fn symbol_pins_on_rotated_and_mirrored_instances() {
+    let mut s = Session::new();
+    s.execute("circle", &json!({"center": [0, 0], "radius": 1})).unwrap();
+    let entities: Vec<String> = s.doc().unwrap().model.iter().map(|e| e.handle.hex()).collect();
+    s.execute("block", &json!({"name": "SYM", "handles": entities, "base": [0, 0], "keep": "delete"})).unwrap();
+
+    // Define pins A1 at [-10, 0] and A2 at [10, 0]
+    s.execute(
+        PIN_DEF,
+        &json!({
+            "block": "SYM",
+            "pins": [
+                {"name": "A1", "at": [-10.0, 0.0]},
+                {"name": "A2", "at": [10.0, 0.0]}
+            ]
+        }),
+    )
+    .unwrap();
+
+    // Normal instance at [100, 100], rot 0, scale [1, 1]
+    let h1 = s.execute("insert", &json!({"name": "SYM", "at": [100, 100]})).unwrap()["handle"].as_str().unwrap().to_string();
+    let q1 = s.execute(PINS, &json!({"handle": h1})).unwrap();
+    assert_eq!(q1["pins"][0]["name"], "A1");
+    assert!((q1["pins"][0]["at"][0].as_f64().unwrap() - 90.0).abs() < 1e-6);
+    assert!((q1["pins"][0]["at"][1].as_f64().unwrap() - 100.0).abs() < 1e-6);
+    assert_eq!(q1["pins"][1]["name"], "A2");
+    assert!((q1["pins"][1]["at"][0].as_f64().unwrap() - 110.0).abs() < 1e-6);
+    assert!((q1["pins"][1]["at"][1].as_f64().unwrap() - 100.0).abs() < 1e-6);
+
+    // Rotated instance: 90 deg at [200, 200]
+    let h2 = s.execute("insert", &json!({"name": "SYM", "at": [200, 200], "rotation": 90.0})).unwrap()["handle"].as_str().unwrap().to_string();
+    let q2 = s.execute(PINS, &json!({"handle": h2})).unwrap();
+    // A1 rotated 90 deg: x' = -y = 0, y' = x = -10. World: [200, 190]
+    assert!((q2["pins"][0]["at"][0].as_f64().unwrap() - 200.0).abs() < 1e-6);
+    assert!((q2["pins"][0]["at"][1].as_f64().unwrap() - 190.0).abs() < 1e-6);
+    // A2 rotated 90 deg: x' = 0, y' = 10. World: [200, 210]
+    assert!((q2["pins"][1]["at"][0].as_f64().unwrap() - 200.0).abs() < 1e-6);
+    assert!((q2["pins"][1]["at"][1].as_f64().unwrap() - 210.0).abs() < 1e-6);
+
+    // Mirrored instance: scale [-1, 1, 1] at [300, 300]
+    let h3 =
+        s.execute("insert", &json!({"name": "SYM", "at": [300, 300], "scale": [-1.0, 1.0, 1.0]})).unwrap()["handle"].as_str().unwrap().to_string();
+    let q3 = s.execute(PINS, &json!({"handle": h3})).unwrap();
+    // A1 mirrored across X: local x was -10 -> -(-10) = +10. World: [310, 300]
+    assert!((q3["pins"][0]["at"][0].as_f64().unwrap() - 310.0).abs() < 1e-6);
+    assert!((q3["pins"][0]["at"][1].as_f64().unwrap() - 300.0).abs() < 1e-6);
+    // A2 mirrored across X: local x was +10 -> -10. World: [290, 300]
+    assert!((q3["pins"][1]["at"][0].as_f64().unwrap() - 290.0).abs() < 1e-6);
+    assert!((q3["pins"][1]["at"][1].as_f64().unwrap() - 300.0).abs() < 1e-6);
+}
+
+#[test]
+fn wire_connects_pins_and_computes_net() {
+    let mut s = Session::new();
+    s.execute("circle", &json!({"center": [0, 0], "radius": 1})).unwrap();
+    let entities: Vec<String> = s.doc().unwrap().model.iter().map(|e| e.handle.hex()).collect();
+    s.execute("block", &json!({"name": "RELAY", "handles": entities, "base": [0, 0], "keep": "delete"})).unwrap();
+    s.execute(PIN_DEF, &json!({"block": "RELAY", "pins": [{"name": "A1", "at": [-10, 0]}, {"name": "A2", "at": [10, 0]}]})).unwrap();
+
+    let h1 = s.execute("insert", &json!({"name": "RELAY", "at": [0, 0]})).unwrap()["handle"].as_str().unwrap().to_string();
+    let h2 = s.execute("insert", &json!({"name": "RELAY", "at": [50, 0]})).unwrap()["handle"].as_str().unwrap().to_string();
+
+    let dev1 = primary(&mut s, &h1, "K1");
+    let dev2 = primary(&mut s, &h2, "K2");
+
+    // Before wire, pins are unconnected
+    let nets_before = s.execute(NETS, &json!({})).unwrap();
+    assert_eq!(nets_before["nets"].as_array().unwrap().len(), 0);
+    assert_eq!(nets_before["unconnectedPins"].as_array().unwrap().len(), 4);
+
+    // Wire from H1.A2 [10, 0] to H2.A1 [40, 0]
+    let wire_res = s.execute(WIRE, &json!({"points": [[10, 0], [40, 0]]})).unwrap();
+    let wh = wire_res["handles"][0].as_str().unwrap();
+
+    // Now Net 1 connects K1.A2 and K2.A1
+    let nets_after = s.execute(NETS, &json!({})).unwrap();
+    assert_eq!(nets_after["nets"].as_array().unwrap().len(), 1);
+    assert_eq!(nets_after["unconnectedPins"].as_array().unwrap().len(), 2);
+
+    let inspect = s.execute(NET_INSPECT, &json!({"pin": {"handle": h1, "name": "A2"}})).unwrap();
+    assert_eq!(inspect["net"], 1);
+    assert_eq!(inspect["wires"], json!([wh]));
+    assert_eq!(inspect["pins"].as_array().unwrap().len(), 2);
+    let dev_ids = inspect["devices"].as_array().unwrap();
+    assert!(dev_ids.iter().any(|d| d == &dev1));
+    assert!(dev_ids.iter().any(|d| d == &dev2));
+
+    // Highlight selects the wire and both representations
+    s.execute(NET_HIGHLIGHT, &json!({"handle": wh})).unwrap();
+    let sel = s.selection();
+    assert!(sel.iter().any(|h| h.hex() == wh));
+    assert!(sel.iter().any(|h| h.hex() == h1));
+    assert!(sel.iter().any(|h| h.hex() == h2));
+}
+
+#[test]
+fn crossing_wires_distinguished_from_connected_junctions() {
+    let mut s = Session::new();
+    // Wire 1: (0, 10) to (20, 10)
+    let w1 = s.execute(WIRE, &json!({"points": [[0, 10], [20, 10]]})).unwrap()["handles"][0].as_str().unwrap().to_string();
+    // Wire 2: (10, 0) to (10, 20)
+    let w2 = s.execute(WIRE, &json!({"points": [[10, 0], [10, 20]]})).unwrap()["handles"][0].as_str().unwrap().to_string();
+
+    // Crossing without junction: 2 distinct nets!
+    let nets = s.execute(NETS, &json!({})).unwrap();
+    assert_eq!(nets["nets"].as_array().unwrap().len(), 2);
+
+    let insp1 = s.execute(NET_INSPECT, &json!({"handle": w1})).unwrap();
+    let insp2 = s.execute(NET_INSPECT, &json!({"handle": w2})).unwrap();
+    assert_ne!(insp1["net"], insp2["net"]);
+
+    // Add explicit junction at (10, 10)
+    let junc = s.execute(JUNCTION, &json!({"at": [10.0, 10.0]})).unwrap();
+    let jh = junc["handle"].as_str().unwrap();
+
+    // Now they are connected in 1 net!
+    let merged = s.execute(NETS, &json!({})).unwrap();
+    assert_eq!(merged["nets"].as_array().unwrap().len(), 1);
+
+    let insp_merged = s.execute(NET_INSPECT, &json!({"handle": w1})).unwrap();
+    assert_eq!(insp_merged["wires"].as_array().unwrap().len(), 2);
+    assert_eq!(insp_merged["junctions"], json!([[10.0, 10.0]]));
+
+    // Remove junction: splits back into 2 separate nets!
+    s.execute(JUNCTION_REM, &json!({"handle": jh})).unwrap();
+    let split = s.execute(NETS, &json!({})).unwrap();
+    assert_eq!(split["nets"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn undo_redo_wires_junctions_and_nets() {
+    let mut s = Session::new();
+    s.execute(WIRE, &json!({"points": [[0, 0], [10, 0]]})).unwrap();
+    assert_eq!(s.execute(NETS, &json!({})).unwrap()["nets"].as_array().unwrap().len(), 1);
+
+    s.execute("u", &json!({})).unwrap();
+    assert_eq!(s.execute(NETS, &json!({})).unwrap()["nets"].as_array().unwrap().len(), 0);
+
+    s.execute("redo", &json!({})).unwrap();
+    assert_eq!(s.execute(NETS, &json!({})).unwrap()["nets"].as_array().unwrap().len(), 1);
+
+    // Crossing wire + junction
+    s.execute(WIRE, &json!({"points": [[5, -5], [5, 5]]})).unwrap();
+    assert_eq!(s.execute(NETS, &json!({})).unwrap()["nets"].as_array().unwrap().len(), 2);
+
+    s.execute(JUNCTION, &json!({"at": [5.0, 0.0]})).unwrap();
+    assert_eq!(s.execute(NETS, &json!({})).unwrap()["nets"].as_array().unwrap().len(), 1);
+
+    s.execute("u", &json!({})).unwrap();
+    assert_eq!(s.execute(NETS, &json!({})).unwrap()["nets"].as_array().unwrap().len(), 2);
+
+    s.execute("redo", &json!({})).unwrap();
+    assert_eq!(s.execute(NETS, &json!({})).unwrap()["nets"].as_array().unwrap().len(), 1);
+}
+
+#[test]
+fn dxf_ascii_binary_and_dwg_preserve_pins_wires_junctions_and_nets() {
+    let mut s = Session::new();
+    s.execute("circle", &json!({"center": [0, 0], "radius": 1})).unwrap();
+    let entities: Vec<String> = s.doc().unwrap().model.iter().map(|e| e.handle.hex()).collect();
+    s.execute("block", &json!({"name": "RELAY", "handles": entities, "base": [0, 0], "keep": "delete"})).unwrap();
+    s.execute(PIN_DEF, &json!({"block": "RELAY", "pins": [{"name": "A1", "at": [-10, 0]}, {"name": "A2", "at": [10, 0]}]})).unwrap();
+
+    let h1 = s.execute("insert", &json!({"name": "RELAY", "at": [0, 0]})).unwrap()["handle"].as_str().unwrap().to_string();
+    let h2 = s.execute("insert", &json!({"name": "RELAY", "at": [50, 0], "rotation": 90.0})).unwrap()["handle"].as_str().unwrap().to_string();
+
+    primary(&mut s, &h1, "K1");
+    primary(&mut s, &h2, "K2");
+
+    // Wire from H1.A2 [10, 0] to [30, 0]
+    s.execute(WIRE, &json!({"points": [[10, 0], [30, 0]]})).unwrap();
+    // Wire from [30, 0] to H2.A1 (which is rotated: [50, 0] + [0, -10] = [50, -10])
+    s.execute(WIRE, &json!({"points": [[30, 0], [50, -10]]})).unwrap();
+    // Crossing wire through [30, 0]
+    s.execute(WIRE, &json!({"points": [[30, -10], [30, 10]]})).unwrap();
+    // Explicit junction at [30, 0]
+    s.execute(JUNCTION, &json!({"at": [30.0, 0.0]})).unwrap();
+
+    let expected_nets = s.execute(NETS, &json!({})).unwrap();
+    assert_eq!(expected_nets["nets"].as_array().unwrap().len(), 1);
+    assert_eq!(expected_nets["nets"][0]["pins"].as_array().unwrap().len(), 2);
+    assert_eq!(expected_nets["nets"][0]["wires"].as_array().unwrap().len(), 3);
+
+    for (name, binary) in [("circuit.dxf", false), ("circuit.dxf", true), ("circuit.dwg", false)] {
+        let bytes = cadcraft_io::write_with(s.doc().unwrap(), name, &cadcraft_io::SaveOptions { binary, ..Default::default() }).unwrap();
+        let read = cadcraft_io::read(&bytes, name).unwrap();
+        let mut reopened = Session::new();
+        reopened.open_drawing(read, name, None);
+        let actual_nets = reopened.execute(NETS, &json!({})).unwrap();
+        assert_eq!(actual_nets["nets"].as_array().unwrap().len(), 1, "failed for {name}");
+        assert_eq!(actual_nets["nets"][0]["pins"].as_array().unwrap().len(), 2, "failed for {name}");
+        assert_eq!(actual_nets["nets"][0]["wires"].as_array().unwrap().len(), 3, "failed for {name}");
+        assert_eq!(actual_nets["nets"][0]["junctions"].as_array().unwrap().len(), 1, "failed for {name}");
+
+        let actual_pins = reopened.execute(PINS, &json!({"block": "RELAY"})).unwrap();
+        assert_eq!(actual_pins["pins"].as_array().unwrap().len(), 2, "pins failed for {name}");
+    }
+}
+
+#[test]
+fn wire_assign_detach_and_pin_removal() {
+    let mut s = Session::new();
+    s.execute("circle", &json!({"center": [0, 0], "radius": 1})).unwrap();
+    let entities: Vec<String> = s.doc().unwrap().model.iter().map(|e| e.handle.hex()).collect();
+    s.execute("block", &json!({"name": "SW", "handles": entities, "base": [0, 0], "keep": "delete"})).unwrap();
+
+    // Define 2 pins: 1 and 2
+    s.execute(PIN_DEF, &json!({"block": "SW", "pins": [{"name": "1", "at": [-5, 0]}, {"name": "2", "at": [5, 0]}]})).unwrap();
+    let query = s.execute(PINS, &json!({"block": "SW"})).unwrap();
+    assert_eq!(query["pins"].as_array().unwrap().len(), 2);
+
+    // Remove pin 1
+    s.execute(PIN_REM, &json!({"block": "SW", "name": "1"})).unwrap();
+    let query = s.execute(PINS, &json!({"block": "SW"})).unwrap();
+    assert_eq!(query["pins"].as_array().unwrap().len(), 1);
+    assert_eq!(query["pins"][0]["name"], "2");
+
+    // Remove all remaining pins
+    s.execute(PIN_REM, &json!({"block": "SW"})).unwrap();
+    let query = s.execute(PINS, &json!({"block": "SW"})).unwrap();
+    assert_eq!(query["pins"].as_array().unwrap().len(), 0);
+
+    // Draw ordinary line
+    s.execute("line", &json!({"points": [[0, 0], [10, 0]]})).unwrap();
+    let line_h = s.doc().unwrap().model.iter().find(|e| matches!(e.kind, EntityKind::Line(_))).unwrap().handle.hex();
+
+    // Not a wire yet
+    let nets = s.execute(NETS, &json!({})).unwrap();
+    assert_eq!(nets["nets"].as_array().unwrap().len(), 0);
+
+    // Assign line as wire
+    s.execute(WIRE_ASSIGN, &json!({"handles": [line_h.clone()]})).unwrap();
+    let nets = s.execute(NETS, &json!({})).unwrap();
+    assert_eq!(nets["nets"].as_array().unwrap().len(), 1);
+    assert_eq!(nets["nets"][0]["wires"], json!([line_h]));
+
+    // Inspect by point along the line
+    let insp = s.execute(NET_INSPECT, &json!({"point": [5.0, 0.0]})).unwrap();
+    assert_eq!(insp["net"], 1);
+
+    // Detach wire
+    s.execute(WIRE_DETACH, &json!({"handles": [line_h]})).unwrap();
+    let nets = s.execute(NETS, &json!({})).unwrap();
+    assert_eq!(nets["nets"].as_array().unwrap().len(), 0);
 }

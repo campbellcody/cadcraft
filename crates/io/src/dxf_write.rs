@@ -630,6 +630,7 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
             thickness(w, e);
             w.p(10, l.a);
             w.p(11, l.b);
+            w.t.extend(crate::electrical::tags(d, e.handle));
         }
         EntityKind::Point(p) => {
             w.s(0, "POINT");
@@ -639,6 +640,7 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
             if p.angle != 0.0 {
                 w.f(50, p.angle.to_degrees());
             }
+            w.t.extend(crate::electrical::tags(d, e.handle));
         }
         EntityKind::Circle(c) => {
             w.s(0, "CIRCLE");
@@ -646,6 +648,7 @@ fn entity(w: &mut W, d: &Drawing, e: &Entity, owner: &str, paper: bool, cx: &Ctx
             thickness(w, e);
             w.p(10, c.center);
             w.f(40, c.radius);
+            w.t.extend(crate::electrical::tags(d, e.handle));
         }
         EntityKind::Arc(a) => {
             w.s(0, "ARC");
@@ -2370,6 +2373,7 @@ fn tags_for(d: &Drawing, version: Version, target: Version) -> Vec<Tag> {
         if !desc.is_empty() {
             w.s(4, desc);
         }
+        w.t.extend(crate::electrical::block_tags(d, name));
         for e in ents {
             entity(w, d, e, brh, false, &cx);
         }

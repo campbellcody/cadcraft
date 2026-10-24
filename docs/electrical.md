@@ -19,6 +19,18 @@ palette or guided insertion dialog. Use `electrical.components {}` to inspect as
 | `electrical.component.detach` | Remove a reference's association while retaining geometry and visible attributes |
 | `electrical.components` | List live devices, their representations and unassigned block references |
 | `electrical.bom` | Return a physical-device BOM, optionally writing a CSV |
+| `electrical.pin.define` | Define named connection pins on a symbol in block-local coordinates |
+| `electrical.pin.remove` | Remove pin(s) from a symbol definition |
+| `electrical.pins` | Query pins on a symbol or resolved world-space pins on an instance |
+| `electrical.wire` | Draw wire segments on a wire layer and register them |
+| `electrical.wire.assign` | Register existing lines/polylines as wires |
+| `electrical.wire.detach` | Remove wire registration |
+| `electrical.junction` | Add an explicit electrical junction dot at a coordinate or on an entity |
+| `electrical.junction.remove` | Remove an explicit junction |
+| `electrical.junctions` | List active junctions |
+| `electrical.net.inspect` | Inspect the net containing a wire, pin, device or point |
+| `electrical.net.highlight` | Inspect and highlight a net's entities in the active selection |
+| `electrical.nets` | Compute and list all nets and unconnected pins |
 
 These are CADCraft extension commands, not claims of compatible AutoCAD Electrical commands.
 Programmatic calls never open dialogs. Successful edits participate in drawing undo/redo;
@@ -133,9 +145,58 @@ be assigned. Commands currently cap processing at 100,000 top-level drawing enti
 and 10,000 stored devices/representations. Metadata is not an electrical connectivity
 graph, a parts-catalog database or a safety/compliance check.
 
+## Symbol pins and wire connectivity
+
+Symbols (block definitions) can define named connection pins in block-local coordinates:
+
+```text
+electrical.pin.define {"block":"RELAY_COIL","pins":[{"name":"A1","at":[-10,0]},{"name":"A2","at":[10,0]}]}
+electrical.pin.define {"block":"CONTACT_NO","pins":[{"name":"13","at":[0,5]},{"name":"14","at":[0,-5]}]}
+```
+
+When an instance of the block is inserted, rotated or mirrored (e.g. through negative scaling),
+the instance's pins are automatically transformed to world space:
+- Translation shifts pin positions to the insertion point.
+- Rotation rotates pin directions around the insertion base.
+- Mirroring (e.g. `scale.x = -1.0` or `scale.y = -1.0`) flips pin positions across the mirror axis.
+
+Use `electrical.pins {"handle":"<insert-handle>"}` to inspect the resolved world coordinates of an
+instance's pins.
+
+### Wires and explicit junctions
+
+Wires connect pins and explicit junctions to form electrical nets:
+- `electrical.wire {"points":[[10,0],[40,0]]}` creates LINE segments on layer `WIRES` and marks them as wires.
+- `electrical.wire.assign {"handles":["101"]}` registers existing lines or polylines as wires.
+- Connected endpoints (within tolerance `1e-4`) form a continuous conductor.
+- **Crossing wires versus connected junctions**: When two wires cross without an explicit junction,
+  they are treated as crossing conductors and remain in separate electrical nets. Placing an explicit
+  junction at the intersection connects both wires into the same net:
+  ```text
+  electrical.junction {"at":[10,10]}
+  ```
+- Removing or undoing the junction splits the wires back into independent nets.
+
+### Net inspection and highlighting
+
+Use `electrical.net.inspect` to trace the net connected to any wire, pin, device or coordinate:
+
+```text
+electrical.net.inspect {"handle":"<wire-or-insert-handle>"}
+electrical.net.inspect {"pin":{"handle":"<insert-handle>","name":"A1"}}
+electrical.net.inspect {"point":[10,10]}
+electrical.net.highlight {"handle":"<wire-handle>"}
+electrical.nets {}
+```
+
+Passing `"highlight": true` or using `electrical.net.highlight` selects the wire and symbol representation
+handles of the net in the session selection, highlighting them in the interface.
+
+All wire creation, junction placement and pin definition participate in the drawing undo/redo history.
+Pins, wires and explicit junctions persist through ASCII DXF, binary DXF and DWG save and reopen cycles.
+
 ## Next electrical work
 
-Connection points and wire nets can build on these device identities. Project-wide
-tagging, contact pin inventories, visual attribute synchronization, terminal strips,
+Project-wide tagging, contact pin inventories, visual attribute synchronization, terminal strips,
 panel placement and circuit-aware copy behavior need their own implementations and
 end-to-end tests.
