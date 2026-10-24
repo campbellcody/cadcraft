@@ -12,6 +12,7 @@ mod dxf_read;
 mod dxf_table;
 mod dxf_write;
 mod dxf_xref;
+mod electrical;
 pub mod pdf;
 pub mod plotter;
 pub mod svg;
@@ -63,7 +64,7 @@ pub fn read(bytes: &[u8], name: &str) -> Result<Drawing> {
     if cadcraft_dwg::is_dwg(bytes) {
         let (dxf, notes) = cadcraft_dwg::dwg_to_dxf_noted(bytes, cadcraft_dwg::Limits::DEFAULT).map_err(IoError::Format)?;
         let mut d = dxf_read::read(&dxf).map_err(|e| IoError::Format(format!("{e} (in the DXF converted from this DWG)")))?;
-        d.read_notes = notes;
+        d.read_notes.extend(notes);
         return Ok(d);
     }
     match ext(name).as_str() {
@@ -84,6 +85,7 @@ pub fn write(d: &Drawing, name: &str) -> Result<Vec<u8>> {
 /// Like [`write`], with the DXF/DWG version and binary DXF chosen by `opts`. Binary applies to
 /// DXF only; asking for it with another format is an error.
 pub fn write_with(d: &Drawing, name: &str, opts: &SaveOptions) -> Result<Vec<u8>> {
+    electrical::validate(d)?;
     let version = opts.version.unwrap_or_else(|| save_version(d));
     match ext(name).as_str() {
         "dxf" | "" => {

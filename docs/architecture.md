@@ -1,6 +1,6 @@
 # CADCraft architecture
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-10 · **Change:** major (first committed architecture doc, written from the code on main at bd2412f) · **Target:** Autodesk AutoCAD 2027
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-24 · **Change:** minor (electrical device registry and persistence) · **Target:** Autodesk AutoCAD 2027
 
 How CADCraft is built today. This describes the code on `main`, not plans; plans live in
 [roadmap.md](roadmap.md). Agents: the rules that keep this shape (layering, never-crash,
@@ -44,6 +44,11 @@ wgpu or rfd.
   underlays in the model yet ([gaps.md](gaps.md)).
 - Entity collections are copy-on-write, so undo is a whole-drawing snapshot that costs little.
 - Coordinates are f64 world units. 2D work happens in the WCS; there is no UCS yet.
+- `Drawing::electrical` is a copy-on-write registry of physical electrical devices and
+  top-level block representations. Stable random identities are independent of handles
+  and tags; coil/contact/footprint views share a device. The I/O layer persists a versioned
+  envelope on each INSERT; the engine supplies association, metadata and physical-device
+  BOM commands. Generic copies are unassigned. See [electrical.md](electrical.md).
 
 ## Commands
 
@@ -91,4 +96,5 @@ allocations are capped (DXF tag counts, DWG size limits, hatch segment and islan
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-24 | minor | Electrical device identities, representation registry, per-INSERT persistence and BOM commands |
 | 2026-10-10 | major | First committed architecture doc, measured from the code (crate sizes, entity kinds, command counts) |

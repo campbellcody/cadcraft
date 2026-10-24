@@ -135,11 +135,7 @@ fn head(tags: &[Tag]) -> Head {
                 h.has_reactors |= group.as_deref() == Some("ACAD_REACTORS");
             }
             (_, Some("ACAD_REACTORS")) => h.reactors.push(norm(&t.str())),
-            (_, Some("ACAD_XDICTIONARY")) => {
-                if h.xdict.is_none() {
-                    h.xdict = Some(norm(&t.str()));
-                }
-            }
+            (_, Some("ACAD_XDICTIONARY")) if h.xdict.is_none() => h.xdict = Some(norm(&t.str())),
             (_, Some(_)) => {}
             (5 | 105, None) if h.handle.is_none() => h.handle = Some(norm(&t.str())),
             (330, None) if h.owner.is_none() => h.owner = Some(norm(&t.str())),

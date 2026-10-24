@@ -746,12 +746,11 @@ impl Interactive for DistM {
                     let model = model_points(&self.sources);
                     s.echo(format!("Distance = {}", fmt_d(s, path_len(model.as_deref().unwrap_or(pts)))));
                 }
-                Input::Keyword(k) if k == "Undo" => {
-                    if pts.len() > 1 {
-                        pts.pop();
-                        self.sources.pop();
-                    }
+                Input::Keyword(k) if k == "Undo" && pts.len() > 1 => {
+                    pts.pop();
+                    self.sources.pop();
                 }
+                Input::Keyword(k) if k == "Undo" => {}
                 Input::Keyword(k) if k == "Length" => self.length = true,
                 Input::Keyword(k) if k == "Total" => return self.total(s),
                 Input::Keyword(k) => s.echo(format!("{k}: not available yet")),
